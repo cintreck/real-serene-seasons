@@ -1,0 +1,40 @@
+{
+    "schemaVersion": 1,
+    "id": "real_serene_seasons",
+    "version": "${version}",
+    "name": "Real Serene Seasons",
+    "description": "Syncs Glitchfiend's Serene Seasons to the real world. Easily configurable.",
+    "authors": [
+        "cintreck"
+    ],
+    "contact": {
+        "homepage": "https://modrinth.com/user/cintreck",
+        "sources": "https://github.com/cintreck/real-serene-seasons"
+    },
+    "license": "CC0-1.0",
+    "icon": "assets/real_serene_seasons/icon.png",
+    "environment": "*",
+    "entrypoints": {
+        "main": [
+            "com.codex.realseasons.RealSeasonsModInitializer"
+        ],
+        "client": [
+            "com.codex.realseasons.RealSeasonsClientInitializer"
+        ],
+        "modmenu": [
+            "com.codex.realseasons.RealSeasonsClientModMenuBridge"
+        ]
+    },
+    "mixins": [],
+    "depends": {
+        "fabricloader": ">=0.17.2",
+        "minecraft": "1.21.x",
+        "java": ">=21",
+        "fabric-api": "*",
+        "sereneseasons": "*"
+    },
+    "suggests": {
+        "cloth-config2": "*",
+        "modmenu": "*"
+    }
+}
