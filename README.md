@@ -15,7 +15,7 @@ Screenshot taken on September 16th, Early Autumn in-game:
 ## Install
 - Requires [Fabric](https://fabricmc.net/), [Fabric API](https://modrinth.com/mod/fabric-api), and [Serene Seasons](https://modrinth.com/mod/serene-seasons).
 - Optional UI: add [Mod Menu](https://modrinth.com/mod/modmenu) and [Cloth Config](https://modrinth.com/mod/cloth-config) to tweak the hemisphere toggle in-game.
-- Place the built jar on both the server and clients so everyone receives calendar-driven seasons. Can be placed on only the server but the client won't see correct day counts.
+- Place the built jar on both the server and clients so everyone receives calendar-driven seasons.
 
 ## Build
 - Java 21 with Gradle + Fabric Loom.

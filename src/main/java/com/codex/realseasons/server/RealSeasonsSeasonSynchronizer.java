@@ -4,6 +4,7 @@ import com.codex.realseasons.RealSeasonsSharedData;
 import com.codex.realseasons.calendar.RealSeasonsCalendarService;
 import com.codex.realseasons.calendar.RealSeasonsCalendarService.RealSeasonsCalendarSnapshot;
 import com.codex.realseasons.config.RealSeasonsCommonConfig;
+import com.codex.realseasons.network.RealSeasonsPackets;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.resources.ResourceKey;
@@ -49,6 +50,19 @@ public final class RealSeasonsSeasonSynchronizer {
         ServerLifecycleEvents.SERVER_STARTED.register(server -> syncAll(server, true));
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> resetCachedState());
         ServerTickEvents.END_SERVER_TICK.register(server -> syncAll(server, false));
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            // Send initial season state to newly joined player
+            SeasonTime currentState = stateStore.current();
+            sender.sendPacket(new RealSeasonsPackets.SeasonStatePayload(currentState.getSeasonCycleTicks()));
+
+            // Also send display days
+            int days = switch (configSupplier.get().cadence()) {
+                case MONTH -> java.time.LocalDate.now(configSupplier.get().zoneId()).lengthOfMonth();
+                case WEEK -> 7;
+                case DAY -> 1;
+            };
+            sender.sendPacket(new RealSeasonsPackets.DisplayDaysPayload(days));
+        });
     }
 
     public void resetCachedState() {
@@ -58,11 +72,12 @@ public final class RealSeasonsSeasonSynchronizer {
 
     private void syncAll(MinecraftServer server, boolean forceBroadcast) {
         RealSeasonsCommonConfig config = configSupplier.get();
-        // Ensure Serene Seasons' UI day count tracks our cadence (MONTH/WEEK/DAY)
-        displayLinker.maybeApply(server, config);
         RealSeasonsCalendarSnapshot snapshot = calendarService.snapshot(config);
         SeasonTime desiredState = snapshot.seasonTime();
         stateStore.update(desiredState);
+
+        // Ensure Serene Seasons' UI day count tracks our cadence and broadcast to clients
+        displayLinker.maybeApply(server, config, desiredState);
 
         for (ServerLevel level : server.getAllLevels()) {
             if (!ModConfig.seasons.isDimensionWhitelisted(level.dimension())) {
@@ -71,6 +86,11 @@ public final class RealSeasonsSeasonSynchronizer {
 
             disableSeasonCycle(level);
             applySeasonState(level, desiredState, forceBroadcast);
+        }
+
+        // Broadcast season state on season changes
+        if (forceBroadcast) {
+            displayLinker.broadcastSeasonState(server, desiredState);
         }
     }
 

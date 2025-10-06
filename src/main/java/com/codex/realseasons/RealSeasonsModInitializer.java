@@ -27,13 +27,19 @@ public final class RealSeasonsModInitializer implements ModInitializer {
     public void onInitialize() {
         config = RealSeasonsCommonConfig.loadOrCreate();
         stateStore = new RealSeasonsSeasonStateStore();
-        RealSeasonsCalendarService calendarService = new RealSeasonsCalendarService(Clock.systemDefaultZone());
-        synchronizer = new RealSeasonsSeasonSynchronizer(() -> config, calendarService, stateStore);
-        synchronizer.register();
+
+        // Server-side only: register synchronizer and calendar service
+        EnvType envType = FabricLoader.getInstance().getEnvironmentType();
+        if (envType == EnvType.SERVER || FabricLoader.getInstance().getGameDir().resolve("server.properties").toFile().exists()) {
+            RealSeasonsCalendarService calendarService = new RealSeasonsCalendarService(Clock.systemDefaultZone());
+            synchronizer = new RealSeasonsSeasonSynchronizer(() -> config, calendarService, stateStore);
+            synchronizer.register();
+        }
 
         // Register S2C payload codec on the server only. The client registers in its own initializer.
-        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
+        if (envType == EnvType.SERVER) {
             PayloadTypeRegistry.playS2C().register(RealSeasonsPackets.DisplayDaysPayload.TYPE, RealSeasonsPackets.DisplayDaysPayload.STREAM_CODEC);
+            PayloadTypeRegistry.playS2C().register(RealSeasonsPackets.SeasonStatePayload.TYPE, RealSeasonsPackets.SeasonStatePayload.STREAM_CODEC);
         }
 
         SeasonHelper.ISeasonDataProvider originalProvider = SeasonHelper.dataProvider;
@@ -53,6 +59,10 @@ public final class RealSeasonsModInitializer implements ModInitializer {
 
     public static RealSeasonsCommonConfig config() {
         return config;
+    }
+
+    public static RealSeasonsSeasonStateStore stateStore() {
+        return stateStore;
     }
 
     public static void reloadConfig(RealSeasonsCommonConfig newConfig) {

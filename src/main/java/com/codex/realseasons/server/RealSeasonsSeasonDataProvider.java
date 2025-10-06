@@ -27,7 +27,8 @@ public final class RealSeasonsSeasonDataProvider implements SeasonHelper.ISeason
 
     @Override
     public ISeasonState getClientSeasonState(Level level) {
-        return delegate.getClientSeasonState(level);
+        // Use our synchronized state on client too to prevent desync
+        return stateStore.current();
     }
 
     @Override
