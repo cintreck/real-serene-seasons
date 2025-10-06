@@ -155,7 +155,6 @@ public final class RealSeasonsCommonConfig {
     private static CommentedFileConfig openFile(Path path) {
         return CommentedFileConfig.builder(path)
                 .preserveInsertionOrder()
-                .autosave()
                 .writingMode(WritingMode.REPLACE)
                 .build();
     }
