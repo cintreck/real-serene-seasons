@@ -28,15 +28,13 @@ public final class RealSeasonsModInitializer implements ModInitializer {
         config = RealSeasonsCommonConfig.loadOrCreate();
         stateStore = new RealSeasonsSeasonStateStore();
 
-        // Server-side only: register synchronizer and calendar service
-        EnvType envType = FabricLoader.getInstance().getEnvironmentType();
-        if (envType == EnvType.SERVER || FabricLoader.getInstance().getGameDir().resolve("server.properties").toFile().exists()) {
-            RealSeasonsCalendarService calendarService = new RealSeasonsCalendarService(Clock.systemDefaultZone());
-            synchronizer = new RealSeasonsSeasonSynchronizer(() -> config, calendarService, stateStore);
-            synchronizer.register();
-        }
+        // Register synchronizer - ServerLifecycleEvents only fire on logical server (dedicated + integrated)
+        RealSeasonsCalendarService calendarService = new RealSeasonsCalendarService(Clock.systemDefaultZone());
+        synchronizer = new RealSeasonsSeasonSynchronizer(() -> config, calendarService, stateStore);
+        synchronizer.register();
 
         // Register S2C payload codec on the server only. The client registers in its own initializer.
+        EnvType envType = FabricLoader.getInstance().getEnvironmentType();
         if (envType == EnvType.SERVER) {
             PayloadTypeRegistry.playS2C().register(RealSeasonsPackets.DisplayDaysPayload.TYPE, RealSeasonsPackets.DisplayDaysPayload.STREAM_CODEC);
             PayloadTypeRegistry.playS2C().register(RealSeasonsPackets.SeasonStatePayload.TYPE, RealSeasonsPackets.SeasonStatePayload.STREAM_CODEC);
